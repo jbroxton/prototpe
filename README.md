@@ -16,6 +16,36 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+### Env vars
+
+Create `.env.local` (not committed) and set:
+
+```
+OPENAI_API_KEY=your_openai_key
+MODEL=gpt-4o-mini
+```
+
+Set the same env on Vercel (Project → Settings → Environment Variables).
+
+### Verify a Vercel build locally
+
+Use the Vercel CLI to simulate the exact Vercel build:
+
+```bash
+npm i -g vercel             # once
+vercel link                 # link this folder to your Vercel project
+vercel pull --yes --environment=preview   # pull env into .vercel
+vercel build                # run the same build Vercel uses
+vercel deploy --prebuilt    # optional: serve the local build
+```
+
+### LLM routes
+
+- `POST /api/proto/ops` → returns validated Ops[] for the prototype
+- `POST /api/proto/prd` → returns PRD Markdown given a small scene summary
+
+These use the Vercel AI SDK with OpenAI by default.
+
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
