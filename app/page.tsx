@@ -1,103 +1,203 @@
-import Image from "next/image";
+"use client";
+
+import { useMemo, useState } from "react";
+import { Copilot } from "./components/Copilot";
+import { PRDEditor } from "./components/PRDEditor";
+import { PrototypePreview } from "./components/PrototypePreview";
+import { LayoutShell } from "./components/LayoutShell";
+import { PrototypeChat } from "./components/PrototypeChat";
+import { TabsBar } from "./components/TabsBar";
+import { initialDSLYaml, initialPRD } from "./lib/seed";
+import { parseDSL, stringifyDSL, type DSL } from "./lib/dsl";
+import { parseRequirements, updateRequirementChecks, parseMilestones } from "./lib/prd";
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [prd, setPrd] = useState<string>(initialPRD);
+  const [dslText, setDslText] = useState<string>(initialDSLYaml);
+  const [dsl, setDsl] = useState<DSL>(() => parseDSL(initialDSLYaml));
+  const [currentScreenId, setCurrentScreenId] = useState<string>(
+    dsl.screens[0]?.id || ""
+  );
+  const [zoom, setZoom] = useState<number>(100);
+  const [error, setError] = useState<string | null>(null);
+  const [lastSync, setLastSync] = useState<string>("");
+  const [centerMode, setCenterMode] = useState<"prd" | "proto">("prd");
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  // DSL editing is handled by Copilot only (DSL editor hidden)
+
+  const handleApply = (updates: { prd?: string; dsl?: DSL | string }) => {
+    if (typeof updates.prd === "string") setPrd(updates.prd);
+    if (updates.dsl) {
+      const nextText = typeof updates.dsl === "string" ? updates.dsl : stringifyDSL(updates.dsl);
+      setDslText(nextText);
+      try {
+        setDsl(parseDSL(nextText));
+        setError(null);
+      } catch (e: any) {
+        setError(e.message || "Invalid DSL");
+      }
+    }
+  };
+
+  const modifyDSL = (updater: (d: DSL) => void) => {
+    const clone: DSL = JSON.parse(JSON.stringify(dsl));
+    updater(clone);
+    setDsl(clone);
+    setDslText(stringifyDSL(clone));
+  };
+
+  const handleAddScreenPRDNote = (name: string) => {
+    // Append a simple PRD note under User Journeys to reflect added screen
+    const sectionHeader = "## User Journeys";
+    if (prd.includes(sectionHeader)) {
+      // insert a bullet at end of section (simple heuristic)
+      const lines = prd.split("\n");
+      const idx = lines.findIndex((l) => l.trim().toLowerCase() === sectionHeader.toLowerCase());
+      if (idx !== -1) {
+        // find next section or end
+        let j = idx + 1;
+        while (j < lines.length && !lines[j].startsWith("## ")) j++;
+        lines.splice(j, 0, `- Includes ${name} step`);
+        setPrd(lines.join("\n"));
+        return;
+      }
+    }
+    setPrd((p) => p.trimEnd() + `\n\n## User Journeys\n- Includes ${name} step\n`);
+  };
+
+  const syncFromPRD = () => {
+    // 1) Ensure referenced screens exist (from PRD text)
+    const lower = prd.toLowerCase();
+    const want: string[] = [];
+    const known = ["home", "details", "checkout", "confirmation", "dashboard", "login"];
+    known.forEach((k) => { if (lower.includes(k)) want.push(k); });
+    modifyDSL((d) => {
+      want.forEach((k) => {
+        if (!d.screens.find((s) => s.id === k)) {
+          d.screens.push({ id: k, name: k[0].toUpperCase() + k.slice(1), device: k === "dashboard" ? "web" : "mobile", size: k === "dashboard" ? { width: 1280, height: 800 } : undefined, components: [ { type: (k === "dashboard") ? "header" : "navbar", frame: { x: 0, y: 0, w: (k === "dashboard") ? 1280 : 390, h: (k === "dashboard") ? 64 : 56 }, props: { title: k[0].toUpperCase() + k.slice(1) } } ] } as any);
+        }
+      });
+    });
+
+    // 2) Milestones: tag screens/components by version groups (V0->M0, etc.)
+    const ms = parseMilestones(prd);
+    const versionToM = (v: "V0"|"V1"|"V2") => (v === "V0" ? "M0" : v === "V1" ? "M1" : "M2");
+    modifyDSL((d) => {
+      ms.forEach((group) => {
+        // CUJ: infer screens mentioned and tag them with milestone
+        group.items.filter(it=>it.type==="CUJ").forEach((it) => {
+          const lower = it.text.toLowerCase();
+          ["home","details","checkout","confirmation","dashboard","login"].forEach((id) => {
+            if (lower.includes(id)) {
+              const s = d.screens.find((x)=>x.id===id);
+              if (s) s.milestone = versionToM(group.version) as any;
+            }
+          });
+        });
+      });
+    });
+
+    // 3) Map PRD Requirements bullets to visible elements + checkbox status
+    const reqs = parseRequirements(prd);
+    const checks: Record<number, boolean> = {};
+    modifyDSL((d) => {
+      reqs.forEach((r) => {
+        const screenId = r.page as any;
+        const s = d.screens.find((x) => x.id === screenId) || d.screens[0];
+        if (!s) return;
+        const safeY = (base: number) => {
+          // place below existing components
+          const last = s.components.reduce((m, c) => Math.max(m, c.frame.y + c.frame.h), 64);
+          return Math.max(base, last + 12);
+        };
+        const has = (type: string) => s.components.some((c) => c.type === type);
+        switch (r.kind) {
+          case "search":
+            if (!s.components.some((c) => c.type === "input" && String(c.props?.placeholder || "").toLowerCase().includes("search"))) {
+              s.components.push({ type: "input", frame: { x: 16, y: safeY(72), w: s.device === "web" ? 420 : 358, h: 40 }, props: { placeholder: "Search..." }, milestone: d.screens.find(x=>x.id===screenId)?.milestone || "M1" } as any);
+            }
+            checks[r.lineIndex] = true;
+            break;
+          case "dropdown":
+            if (!has("dropdown")) {
+              s.components.push({ type: "dropdown", frame: { x: 16, y: safeY(120), w: s.device === "web" ? 240 : 240, h: 40 }, props: {}, milestone: d.screens.find(x=>x.id===screenId)?.milestone || "M1" } as any);
+            }
+            checks[r.lineIndex] = true;
+            break;
+          case "list":
+            if (!has("list")) {
+              s.components.push({ type: "list", frame: { x: 16, y: safeY(160), w: s.device === "web" ? 600 : 358, h: 200 }, props: {}, milestone: d.screens.find(x=>x.id===screenId)?.milestone || "M0" } as any);
+            }
+            checks[r.lineIndex] = true;
+            break;
+          case "carousel":
+            if (!has("carousel")) {
+              s.components.push({ type: "carousel", frame: { x: 16, y: safeY(200), w: s.device === "web" ? 800 : 358, h: 140 }, props: {}, milestone: d.screens.find(x=>x.id===screenId)?.milestone || "M1" } as any);
+            }
+            checks[r.lineIndex] = true;
+            break;
+          case "video":
+            if (!has("video")) {
+              s.components.push({ type: "video", frame: { x: 16, y: safeY(240), w: s.device === "web" ? 600 : 358, h: 180 }, props: {}, milestone: d.screens.find(x=>x.id===screenId)?.milestone || "M2" } as any);
+            }
+            checks[r.lineIndex] = true;
+            break;
+          case "button":
+          case "input":
+          default:
+            if (!has(r.kind)) {
+              const type = r.kind === "button" ? "button" : "input";
+              s.components.push({ type, frame: { x: 16, y: safeY(280), w: s.device === "web" ? 200 : 200, h: 44 }, props: { text: type === "button" ? "Continue" : undefined, placeholder: type === "input" ? "Input" : undefined }, milestone: d.screens.find(x=>x.id===screenId)?.milestone || "M0" } as any);
+            }
+            checks[r.lineIndex] = true;
+            break;
+        }
+      });
+    });
+    // Update PRD checkboxes
+    setPrd((p) => updateRequirementChecks(p, checks));
+
+    setLastSync(new Date().toLocaleTimeString());
+  };
+
+  return (
+    <>
+    <TabsBar />
+    <LayoutShell
+      dsl={dsl}
+      zoom={zoom}
+      onZoom={setZoom}
+      currentScreenId={currentScreenId}
+      onSelectScreen={setCurrentScreenId}
+    >
+      <div className="grid grid-cols-[300px_minmax(0,1fr)_minmax(0,1.25fr)] gap-4 h-[calc(100vh-88px)] p-4">
+        <div className="rounded-xl bg-white/70 dark:bg-black/30 backdrop-blur border border-black/5 dark:border-white/10 shadow-sm overflow-hidden">
+          <Copilot prd={prd} dsl={dsl} dslText={dslText} onApply={handleApply} />
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+        <div className="rounded-xl overflow-hidden min-h-0 h-full">
+          <div className="rounded-xl bg-black/60 border border-white/10 shadow-sm h-full min-h-0 flex flex-col overflow-hidden">
+            {centerMode === 'prd' ? (
+              <PRDEditor value={prd} onChange={setPrd} onOpenPrototype={()=>setCenterMode('proto')} />
+            ) : (
+              <PrototypeChat onBack={()=>setCenterMode('prd')} />
+            )}
+          </div>
+        </div>
+        <div className="rounded-xl bg-white/70 dark:bg-black/30 backdrop-blur border border-black/5 dark:border-white/10 shadow-sm overflow-hidden">
+          <PrototypePreview
+            dsl={dsl}
+            currentScreenId={currentScreenId}
+            onSelectScreen={setCurrentScreenId}
+            zoom={zoom}
+            onModifyDSL={modifyDSL}
+            onAddScreen={handleAddScreenPRDNote}
+            onSyncFromPRD={syncFromPRD}
+            lastSync={lastSync}
+            prd={prd}
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+        </div>
+      </div>
+    </LayoutShell>
+    </>
   );
 }
