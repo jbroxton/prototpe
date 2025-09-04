@@ -21,7 +21,7 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 Create `.env.local` (not committed) and set:
 
 ```
-OPENAI_API_KEY=your_openai_key
+OPENAI_API_KEY=YOUR_OPENAI_API_KEY
 MODEL=gpt-4o-mini
 ```
 

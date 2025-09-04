@@ -15,7 +15,8 @@ export function TabsBar() {
       return list as {type:string;id:string;title:string}[];
     } catch { return []; }
   };
-  const [openTabs, setOpenTabs] = useState<{ type:string; id: string; title: string }[]>(readTabs);
+  // Avoid hydration mismatch: don't read sessionStorage in initial render
+  const [openTabs, setOpenTabs] = useState<{ type:string; id: string; title: string }[]>([]);
   const [sidebarVisible, setSidebarVisible] = useState(true);
   const [protoOpen, setProtoOpen] = useState(false);
   const [protoWide, setProtoWide] = useState(false);

@@ -76,6 +76,8 @@ body {
 .editor-card .cm-gutters, .panel-card .cm-gutters { background-color: transparent !important; }
 .editor-card .cm-scroller, .panel-card .cm-scroller { height: 100% !important; }
 
+/* (removed shared parent scroller overrides) */
+
 /* Pretty block styling for Test PRD */
 .cm-cuj { background: linear-gradient(90deg, rgba(99,102,241,0.12), transparent); border-left: 3px solid rgba(99,102,241,0.55); border-radius: 6px; }
 .cm-checkblock { background: linear-gradient(90deg, rgba(16,185,129,0.10), transparent); border-left: 3px solid rgba(16,185,129,0.55); border-radius: 6px; }
@@ -159,6 +161,9 @@ body {
   background: rgba(99,102,241,0.12);
   color: #e5e7eb;
 }
+
+/* Hide React Flow attribution badge in diagrams */
+.react-flow__attribution, .react-flow__panel.react-flow__attribution { display: none !important; }
 
 /* Modern, low‑profile horizontal scrollbar for roadmap */
 .x-scroll {

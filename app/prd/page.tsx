@@ -8,7 +8,7 @@ import { TabsBar } from "../components/TabsBar";
 import { TestPrdSidebar } from "../components/test-prd/Sidebar";
 import { PrototypeChat } from "../components/PrototypeChat";
 import { ProtoPane } from "../components/test-prd/ProtoPane";
-import { applyOps, createEmptyScene, type Op } from "../components/wireframe/ops";
+
 
 const CodeMirror = NextDynamic(() => import("@uiw/react-codemirror"), { ssr: false });
 
@@ -58,7 +58,7 @@ function PRDInner() {
   const [protoOpen, setProtoOpen] = useState(false);
   const [protoWide, setProtoWide] = useState(true);
   const [protoScene, setProtoScene] = useState<any>(null);
-  const [protoScreen, setProtoScreen] = useState<string>("home");
+  const [protoScreen, setProtoScreen] = useState<string>("menu");
 
   function genId() { return "blk_" + Math.random().toString(36).slice(2, 8); }
   function insertTemplate(kind: "cuj" | "req" | "ac" | "milestone") {
@@ -110,13 +110,13 @@ function PRDInner() {
           {protoOpen && (
             <>
               <div className="absolute inset-0 bg-black/50" onClick={()=>setProtoOpen(false)} />
-              <div className={`absolute top-0 right-0 h-full ${protoWide ? 'w-[60vw]' : 'w-[520px]'} bg-neutral-950/95 backdrop-blur border-l border-white/10 shadow-2xl transition-all`}>
+              <div className={`absolute inset-0 h-full w-full bg-neutral-950/95 backdrop-blur border-l border-white/10 shadow-2xl transition-all`}>
                 <div className="px-3 py-2 border-b border-white/10 text-sm text-neutral-300">Prototype (interactive)</div>
-                <div className="h-full grid" style={{ gridTemplateColumns: 'minmax(0,1fr) 480px' }}>
+                <div className="h-full grid grid-rows-[auto_1fr]" style={{ gridTemplateColumns: "minmax(0,1fr) 420px" }}>
                   <div className="min-h-0 overflow-auto p-2">
-                    <PrototypeChat headless onBack={()=>setProtoOpen(false)} onGenerateScene={(scene)=>{ setProtoScene(scene); setProtoScreen(scene.screens[0]?.id || 'home'); }} onApplyOps={(ops: Op[])=>{ setProtoScene((prev: any) => applyOps(prev || createEmptyScene('mobile'), ops)); }} />
+                    <PrototypeChat headless onBack={()=>setProtoOpen(false)} />
                   </div>
-                  <ProtoPane scene={protoScene || undefined} setScene={setProtoScene} currentScreenId={protoScreen} onSelectScreen={setProtoScreen} />
+                  <ProtoPane />
                 </div>
               </div>
             </>

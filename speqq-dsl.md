@@ -71,6 +71,7 @@ Acceptance Criteria
 - Sync from PRD adds missing screens named in PRD.
 - Copilot prompts can add screens/flows and update PRD; applied changes reflect in the canvas immediately.
 - No console errors; scrollbars only inside the device scroller; edges look clean.
+- CO Pilot: Given a user inputs a change like Add button to home page" the AI will add it and update the PRD if appropriate. For ex, if the button is to sign out the then PRD should know to add some test / req or CUJ for it, or it improves a CUJ of some sort
 
 Open Questions
 - Should we add anchors (left/right/top/bottom) for responsive constraints?
