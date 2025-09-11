@@ -154,6 +154,11 @@ expert-server/
 - [ ] Wire chat UI to new endpoints and enable streaming with Vercel AI SDK
 - [ ] Draft PRD generator (Zod + structured output) and test
 
+## Entity Layer (Planned)
+- Weaviate via Docker Compose (OSS) as a long‑term KG store; fallback to on‑disk cache.
+- spaCy pipeline (Python) for entity extraction (aliases, types); lightweight JS heuristics as stopgap.
+- New endpoints: `/entities/rebuild`, `/entities/search`, `/entities/suggest` (autocomplete), traversal via related edges.
+
 ## Status Gate
 - Implementation is paused until this plan is approved. Once approved, proceed to replace any custom code with the OSS components listed above and wire endpoints.
 

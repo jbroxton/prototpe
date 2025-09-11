@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { Input } from "../ui/input";
 import * as Dialog from "@radix-ui/react-dialog";
 
 type ApprovalStatus = "NotSubmitted" | "InReview" | "Approved" | "ChangesRequested";
@@ -35,6 +36,8 @@ export function ApprovalPanel({ open, onClose, docId }: { open: boolean; onClose
   const groups = useGroups();
   const [status, setStatus] = useState<ApprovalStatus>(() => getApprovalStatus(docId));
   const [groupId, setGroupId] = useState<string>(() => load<string>(`approval:${docId}:group`, "g_mobile"));
+  const [tab, setTab] = useState<'people'|'teams'>('people');
+  const [q, setQ] = useState('');
 
   useEffect(()=>{ setStatus(getApprovalStatus(docId)); }, [docId, open]);
 
@@ -62,16 +65,45 @@ export function ApprovalPanel({ open, onClose, docId }: { open: boolean; onClose
     <Dialog.Root open={open} onOpenChange={(v: boolean)=>{ if(!v) onClose(); }}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-[80] bg-black/30" />
-        <Dialog.Content className="fixed right-4 top-16 z-[81] w-[360px] rounded-xl border border-white/10 bg-neutral-900/95 shadow-2xl p-3 outline-none">
+        <Dialog.Content className="fixed right-4 top-16 z-[81] w-[360px] rounded-xl border border-white/10 bg-transparent p-3 outline-none">
           <Dialog.Title className="text-sm font-medium mb-2">Approvals</Dialog.Title>
         {status === 'NotSubmitted' && (
           <>
-            <div className="text-xs text-neutral-400 mb-1">Select group</div>
-            <div className="max-h-40 overflow-auto mb-3">
-              {groups.map((g)=> (
-                <button key={g.id} onClick={()=>setGroupId(g.id)} className={`w-full text-left px-2 py-1.5 rounded-md mb-1 border ${groupId===g.id? 'border-indigo-500/40 bg-indigo-600/10' : 'border-white/10 hover:bg-white/5'}`}>{g.name}</button>
-              ))}
+            <div className="text-xs text-neutral-400 mb-1">Choose approvers</div>
+            <div className="flex items-center gap-2 mb-2">
+              <Input value={q} onChange={(e)=>setQ(e.target.value)} placeholder="Search people or teams..." className="h-8" />
+              <div className="inline-flex rounded-md border border-white/10 overflow-hidden text-xs">
+                <button className={`px-2 py-1 hover:bg-white/5 ${tab==='people'?'bg-white/5':''}`} onClick={()=>setTab('people')}>People</button>
+                <button className={`px-2 py-1 hover:bg-white/5 ${tab==='teams'?'bg-white/5':''}`} onClick={()=>setTab('teams')}>Teams</button>
+              </div>
             </div>
+            {tab==='people' ? (
+              <div className="max-h-40 overflow-auto mb-3">
+                {[
+                  { id: 'u1', name: 'Alice Lee', role: 'Product Lead' },
+                  { id: 'u2', name: 'Ben Ortiz', role: 'Engineering Manager' },
+                  { id: 'u3', name: 'Chloe Park', role: 'Design Lead' },
+                  { id: 'u4', name: 'Dana Wu', role: 'QA Lead' },
+                ]
+                  .filter(p=> p.name.toLowerCase().includes(q.toLowerCase()) || p.role.toLowerCase().includes(q.toLowerCase()))
+                  .map((p)=> (
+                    <div key={p.id} className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-white/5 text-sm">
+                      <div className="w-6 h-6 rounded-full bg-neutral-800 grid place-items-center text-[10px]">{p.name.split(' ').map(n=>n[0]).join('')}</div>
+                      <div className="flex-1">
+                        <div className="text-neutral-200">{p.name}</div>
+                        <div className="text-xs text-neutral-400">{p.role}</div>
+                      </div>
+                      <button onClick={()=>setGroupId('g_custom')} className="px-2 py-0.5 rounded border border-white/10 text-xs">Add</button>
+                    </div>
+                  ))}
+              </div>
+            ) : (
+              <div className="max-h-40 overflow-auto mb-3">
+                {groups.filter(g=> g.name.toLowerCase().includes(q.toLowerCase())).map((g)=> (
+                  <button key={g.id} onClick={()=>setGroupId(g.id)} className={`w-full text-left px-2 py-1.5 rounded-md mb-1 border ${groupId===g.id? 'border-indigo-500/40 bg-indigo-600/10' : 'border-white/10 hover:bg-white/5'}`}>{g.name}</button>
+                ))}
+              </div>
+            )}
             <button onClick={submit} className="w-full px-3 py-2 rounded-md border border-indigo-500/40 bg-indigo-600/20 text-indigo-200 text-sm">{label}</button>
           </>
         )}

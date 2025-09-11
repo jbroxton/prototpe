@@ -56,6 +56,7 @@ export function TabsBar() {
     ...openTabs.map(t => (
       t.type==='req' ? { label: t.title, href: `/requirements/${t.id}` } :
       t.type==='roadmap' ? { label: t.title, href: `/roadmap/${t.id}` } :
+      t.type==='launch' ? { label: t.title, href: `/launch/${t.id}` } :
       t.type==='okrs' ? { label: t.title, href: `/okrs/${t.id}` } :
       t.type==='new' ? { label: t.title, href: `/new/${t.id}` } :
       { label: t.title, href: '#' }

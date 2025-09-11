@@ -1,0 +1,31 @@
+
+> speqq-dsl-demo@0.1.0 dev
+> next dev --port 3002
+
+   ▲ Next.js 15.5.2
+   - Local:        http://localhost:3002
+   - Network:      http://192.168.86.239:3002
+   - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 1108ms
+ ○ Compiling /workspace/[wsId]/recent ...
+ ✓ Compiled /workspace/[wsId]/recent in 535ms (707 modules)
+ GET /workspace/space-jam/recent 200 in 1015ms
+ ✓ Compiled /api/integrations/github/webhook in 269ms (732 modules)
+[deploy] payload: {"pr_numbers":[]}
+[deploy] repo: jbroxton/speqq-lifecycle-test env: production state: success prNumbers: [] sha: e55335aa168843da23bcfb21ee920d172e8af921 deploymentId: 2967860927
+prisma:query INSERT INTO "public"."Event" ("id","source","type","payload","ts") VALUES ($1,$2,$3,$4,$5) RETURNING "public"."Event"."id", "public"."Event"."source", "public"."Event"."type", "public"."Event"."payload", "public"."Event"."ts"
+prisma:query SELECT "public"."GithubPr"."id", "public"."GithubPr"."repo", "public"."GithubPr"."prNumber", "public"."GithubPr"."url", "public"."GithubPr"."headSha", "public"."GithubPr"."status", "public"."GithubPr"."mergedAt", "public"."GithubPr"."deployedAt", "public"."GithubPr"."deploymentId", "public"."GithubPr"."createdAt", "public"."GithubPr"."updatedAt" FROM "public"."GithubPr" WHERE ("public"."GithubPr"."repo" = $1 AND "public"."GithubPr"."headSha" = $2) OFFSET $3
+ POST /api/integrations/github/webhook 200 in 628ms
+ ✓ Compiled in 389ms (263 modules)
+ GET /workspace/space-jam/recent 200 in 56ms
+ ✓ Compiled in 114ms (263 modules)
+ GET /workspace/space-jam/recent 200 in 19ms
+ ✓ Compiled /icon in 146ms (728 modules)
+ GET /icon?938618f47982aa43 200 in 247ms
+ ✓ Compiled in 112ms (263 modules)
+ GET /workspace/space-jam/recent 200 in 59ms
+ ✓ Compiled in 106ms (263 modules)
+ GET /workspace/space-jam/recent 200 in 17ms
+ GET /icon?938618f47982aa43 200 in 15ms

@@ -1,0 +1,17 @@
+https://www.mozilla.org/en-US/firefox/133.0/releasenotes/
+https://www.mozilla.org/en-US/firefox/132.0/releasenotes/
+https://www.mozilla.org/en-US/firefox/131.0/releasenotes/
+https://www.mozilla.org/en-US/firefox/130.0/releasenotes/
+https://www.mozilla.org/en-US/firefox/129.0/releasenotes/
+https://www.mozilla.org/en-US/firefox/128.0/releasenotes/
+https://www.mozilla.org/en-US/firefox/127.0/releasenotes/
+https://www.mozilla.org/en-US/firefox/126.0/releasenotes/
+https://www.mozilla.org/en-US/firefox/125.0/releasenotes/
+https://www.mozilla.org/en-US/firefox/124.0/releasenotes/
+https://support.mozilla.org/en-US/kb/firefox-browser-features
+https://support.mozilla.org/en-US/kb/customize-firefox-new-tab-page
+https://support.mozilla.org/en-US/kb/how-customize-new-tab-page
+https://support.mozilla.org/en-US/kb/about-new-firefox
+https://blog.mozilla.org/en/products/firefox/
+https://blog.mozilla.org/en/products/firefox/latest-firefox-release/
+https://blog.mozilla.org/en/products/firefox/firefox-news/

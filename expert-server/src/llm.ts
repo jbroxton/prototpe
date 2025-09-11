@@ -20,3 +20,15 @@ export async function answer(prompt: string, system = 'You are Mozilla Firefox P
   return r.choices[0]?.message?.content || '';
 }
 
+export async function streamAnswer(prompt: string, system = 'You are Mozilla Firefox Product Expert. Prefer official sources and always add citations.') {
+  const stream = await openai.chat.completions.create({
+    model: 'gpt-4o-mini',
+    messages: [
+      { role: 'system', content: system },
+      { role: 'user', content: prompt }
+    ],
+    temperature: 0.2,
+    stream: true
+  });
+  return stream;
+}

@@ -1,13 +1,22 @@
 "use client";
 
-import { NotificationsBell } from "./Notifications";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import Link from "next/link";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from "../ui/dropdown-menu";
+// icons removed per request
+import { TemplateModal } from "./TemplateModal";
 
 export function HeaderBar({ title }: { title: string }) {
   const router = useRouter();
-  const [newOpen, setNewOpen] = useState(false);
+  const [templateOpen, setTemplateOpen] = useState(false);
   function newDoc() {
     const id = String(Math.floor(1000 + Math.random()*9000));
     router.push(`/requirements/${id}`);
@@ -15,6 +24,10 @@ export function HeaderBar({ title }: { title: string }) {
   function newRoadmap() {
     const id = String(Math.floor(1000 + Math.random()*9000));
     router.push(`/roadmap/${id}`);
+  }
+  function newLaunch() {
+    const id = String(Math.floor(1000 + Math.random()*9000));
+    router.push(`/launch/${id}`);
   }
   function newOKR() {
     const id = String(Math.floor(1000 + Math.random()*9000));
@@ -27,40 +40,40 @@ export function HeaderBar({ title }: { title: string }) {
       <div className="font-medium">{title}</div>
       <div className="flex-1" />
       <div className="hidden md:flex items-center gap-2 text-xs text-neutral-400">
-        <div className="relative">
-          <button
-            onClick={() => setNewOpen((v) => !v)}
-            className="px-2 py-1 rounded-md border border-white/10 bg-neutral-800 hover:bg-neutral-800/70"
-          >
-            New ▾
-          </button>
-          {newOpen && (
-            <div
-              className="absolute right-0 mt-2 min-w-44 p-1 rounded-md border border-white/10 bg-neutral-900/95 shadow-lg z-20"
-              onMouseLeave={() => setNewOpen(false)}
-            >
-              <button
-                className="w-full text-left px-3 py-2 rounded-md hover:bg-white/10"
-                onClick={() => { setNewOpen(false); newDoc(); }}
-              >
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="px-3 py-1.5 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-sm">+ New</button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-56" align="end">
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger>
                 Requirements
-              </button>
-              <button
-                className="w-full text-left px-3 py-2 rounded-md hover:bg-white/10"
-                onClick={() => { setNewOpen(false); newRoadmap(); }}
-              >
-                Roadmap
-              </button>
-              <button
-                className="w-full text-left px-3 py-2 rounded-md hover:bg-white/10"
-                onClick={() => { setNewOpen(false); router.push('/okrs'); }}
-              >
-                OKRs
-              </button>
-            </div>
-          )}
-        </div>
+              </DropdownMenuSubTrigger>
+              <DropdownMenuSubContent>
+                <DropdownMenuItem onClick={newDoc}>Blank</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setTemplateOpen(true)}>From Template</DropdownMenuItem>
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+            <DropdownMenuItem onClick={newRoadmap}>
+              Roadmap
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={newLaunch}>Prototype</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => router.push('/okrs')}>
+              OKRs
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
+      <TemplateModal
+        open={templateOpen}
+        onClose={() => setTemplateOpen(false)}
+        onSelect={(template) => {
+          const id = String(Math.floor(1000 + Math.random()*9000));
+          // Pass template data so the editor can prefill
+          router.push(`/requirements/${id}?template=${template.id}&tname=${encodeURIComponent(template.name)}`);
+          setTemplateOpen(false);
+        }}
+      />
       {/* notifications moved to sidebar */}
     </header>
   );

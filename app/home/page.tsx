@@ -4,6 +4,8 @@ import { HeaderBar } from "../components/home/HeaderBar";
 import { Sidebar } from "../components/home/Sidebar";
 import { ProjectCard } from "../components/home/ProjectCard";
 import { TabsBar } from "../components/TabsBar";
+import { useState } from "react";
+import { ExpertChat } from "../components/ExpertChat";
 
 const demoProjects = [
   { name: "Coffee Cart", status: "Active" },
@@ -17,6 +19,7 @@ const demoProjects = [
 ];
 
 export default function HomePage() {
+  const [chatOpen, setChatOpen] = useState(false);
   return (
     <div className="h-screen bg-neutral-950 text-neutral-200 flex flex-col">
       <TabsBar />
@@ -58,6 +61,11 @@ export default function HomePage() {
           </div>
         </div>
       </div>
+      {/* Floating button to open Expert chat */}
+      {!chatOpen && (
+        <button onClick={()=>setChatOpen(true)} className="fixed right-6 bottom-6 px-3 py-2 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white text-sm shadow-xl">Ask Firefox Expert</button>
+      )}
+      {chatOpen && <ExpertChat onClose={()=>setChatOpen(false)} />}
     </div>
   );
 }

@@ -4,9 +4,12 @@ import { TabsBar } from "../../../components/TabsBar";
 import { Sidebar } from "../../../components/home/Sidebar";
 import { ProjectCard } from "../../../components/home/ProjectCard";
 import { HeaderBar } from "../../../components/home/HeaderBar";
+import { useState } from "react";
+import { ExpertChat } from "../../../components/ExpertChat";
 
 const demoProjects = [
   { name: "Add-on Recommendations", id: "1001", status: "Active" },
+  { name: "Sample Launch: Intelligent Search", id: "9001", status: "Active" },
   { name: "2025 OKRS", id: "3001", status: "Active" },
   { name: "2026 OKRS", id: "3002", status: "Draft" },
   { name: "2025 Consumer Roadmap", id: "roadmap", status: "Draft" },
@@ -19,6 +22,7 @@ const demoProjects = [
 ];
 
 export default function WorkspaceRecentPage() {
+  const [chatOpen, setChatOpen] = useState(false);
   return (
     <div className="h-screen bg-neutral-950 text-neutral-200 flex flex-col">
       <TabsBar />
@@ -50,6 +54,7 @@ export default function WorkspaceRecentPage() {
                           status={p.status as any}
                           href={
                             p.name === 'Add-on Recommendations' ? `/requirements/${p.id}` :
+                            p.name === 'Sample Launch: Intelligent Search' ? `/launch/${p.id}` :
                             p.name === '2025 Consumer Roadmap' ? '/roadmap/2001' :
                             p.name === '2025 OKRS' ? '/okrs/3001' :
                             p.name === '2026 OKRS' ? '/okrs/3002' :
@@ -65,6 +70,10 @@ export default function WorkspaceRecentPage() {
           </div>
         </div>
       </div>
+      {!chatOpen && (
+        <button onClick={()=>setChatOpen(true)} className="fixed right-6 bottom-6 px-3 py-2 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white text-sm shadow-xl">Ask Firefox Expert</button>
+      )}
+      {chatOpen && <ExpertChat onClose={()=>setChatOpen(false)} />}
     </div>
   );
 }

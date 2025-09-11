@@ -34,13 +34,38 @@ export default function RequirementsPage() {
         { dark: true }
       );
       const { headingDecorations } = await import("../../lib/editor/heading");
+      const { entitySource } = await import("../../lib/editor/entitySuggest");
       const { protoNode } = await import("../../lib/editor/protoNode");
       const { flowNode } = await import("../../lib/editor/flowNode");
-      const { atMentions } = await import("../../lib/editor/at");
-      const exts: any[] = [md.markdown(), EditorView.lineWrapping, theme, headingDecorations, protoNode, flowNode, atMentions, placeholder("Draft your awesome PRD here...")];
+      const { atSource } = await import("../../lib/editor/at");
+      const { autocompletion } = await import("@codemirror/autocomplete");
+      const exts: any[] = [
+        md.markdown(),
+        EditorView.lineWrapping,
+        theme,
+        headingDecorations,
+        autocompletion({ override: [entitySource('developer'), atSource], icons: false, closeOnBlur: true }),
+        protoNode,
+        flowNode,
+        placeholder("Draft your awesome PRD here...")
+      ];
       setExtensions(exts);
     })();
   }, [docId]);
+
+  // If navigated from template gallery, seed initial content once.
+  useEffect(() => {
+    if (!view) return;
+    try {
+      const tname = search?.get("tname");
+      const seeded = sessionStorage.getItem(`seeded:${docId}`);
+      if (tname && !seeded && view.state.doc.length === 0) {
+        const content = `# ${tname}\n\nCreated from template: ${tname}.\n`;
+        view.dispatch({ changes: { from: 0, to: 0, insert: content } });
+        sessionStorage.setItem(`seeded:${docId}`, "1");
+      }
+    } catch {}
+  }, [view, search, docId]);
 
   const presets: Record<string, { title: string; content: string }> = {
     "1001": {
@@ -271,12 +296,12 @@ Keep the UI visually quiet; cards feel like a helpful nudge rather than a modal.
   return (
     <div className="h-screen bg-neutral-950 text-neutral-200 flex flex-col">
       <TabsBar />
-      <div className="flex-1 min-h-0 grid" style={{ gridTemplateColumns: gridCols }}>
+      <div className="flex-1 min-h-0 grid overflow-hidden" style={{ gridTemplateColumns: gridCols }}>
         <TestPrdSidebar onInsert={insertTemplate} pages={["Untitled Page"]} />
         <div className="min-h-0 flex flex-col relative">
           <div className="panel-shell">
             <div className="panel-card flex flex-col">
-              <div className="px-4 py-2 flex items-center justify-between">
+              <div className="px-4 py-2 flex items-center justify-between flex-shrink-0">
                 <div className="inline-flex items-center gap-2">
                   <EditableTitle id={String(docId)} type="req" initial={presets[String(docId)]?.title || 'Untitled Page'} />
                   {apprStatus !== 'NotSubmitted' && (

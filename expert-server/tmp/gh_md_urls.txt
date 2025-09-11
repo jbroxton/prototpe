@@ -1,0 +1,15 @@
+https://github.com/mozilla/gecko-dev/blob/master/README.md
+https://github.com/mozilla/gecko-dev/blob/master/browser/README.md
+https://github.com/mozilla/gecko-dev/blob/master/toolkit/README
+https://github.com/mozilla/gecko-dev/blob/master/security/README
+https://github.com/mozilla/gecko-dev/blob/master/dom/README
+https://github.com/mozilla/gecko-dev/blob/master/js/README.md
+https://github.com/mozilla/gecko-dev/blob/master/testing/README.txt
+https://github.com/mozilla/gecko-dev/blob/master/intl/README
+https://github.com/mozilla/gecko-dev/blob/master/layout/README
+https://github.com/mozilla/gecko-dev/blob/master/xpcom/README
+https://github.com/mozilla/gecko-dev/blob/master/devtools/README.md
+https://github.com/mozilla/gecko-dev/blob/master/browser/extensions/README
+https://github.com/mozilla/gecko-dev/blob/master/mobile/README
+https://github.com/mozilla/gecko-dev/blob/master/widget/README
+https://github.com/mozilla/gecko-dev/blob/master/gfx/README

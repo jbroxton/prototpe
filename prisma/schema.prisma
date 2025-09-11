@@ -1,0 +1,161 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Event {
+  id       String   @id @default(cuid())
+  source   String
+  type     String
+  payload  Json
+  ts       DateTime @default(now())
+}
+
+model GithubPr {
+  id         String   @id @default(cuid())
+  repo       String
+  prNumber   Int
+  url        String
+  headSha    String
+  status     String   // open | merged | deployed
+  mergedAt   DateTime?
+  deployedAt DateTime?
+  deploymentId BigInt?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([repo, prNumber])
+  @@index([repo, prNumber])
+  @@index([headSha])
+  @@index([deploymentId])
+}
+
+model Link {
+  id         String   @id @default(cuid())
+  sourceType String   // story | ac
+  sourceId   String
+  repo       String
+  prNumber   Int
+  sha        String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([sourceType, sourceId, repo, prNumber])
+  @@index([sourceType, sourceId])
+  @@index([repo, prNumber])
+  @@index([sha])
+}
+
+// Map PRs to the merge commit SHA to reliably match deployments → PRs
+model PrMergeMap {
+  id        String   @id @default(cuid())
+  repo      String
+  prNumber  Int
+  mergeSha  String
+  createdAt DateTime @default(now())
+
+  @@unique([repo, prNumber, mergeSha])
+  @@index([repo, prNumber])
+  @@index([mergeSha])
+}
+
+model JiraStory {
+  id         String    @id @default(cuid())
+  storyId    String    @unique
+  jiraKey    String    @unique
+  lastStatus String?
+  labels     String[]  @default([])
+  lastSummary String?
+  lastDescription String?
+  epicKey    String?
+  appUpdatedAt  DateTime?
+  jiraUpdatedAt DateTime?
+  localUpdatedAt DateTime?
+  jiraSnapshot   Json?
+  deleted    Boolean   @default(false)
+  deletedAt  DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+}
+
+model JiraEvent {
+  id        String   @id @default(cuid())
+  jiraKey   String
+  type      String
+  payload   Json
+  createdAt DateTime @default(now())
+}
+
+model JiraEpic {
+  id            String    @id @default(cuid())
+  appEpicId     String    @unique
+  jiraKey       String    @unique
+  lastStatus    String?
+  labels        String[]  @default([])
+  lastSummary   String?
+  lastDescription String?
+  appUpdatedAt  DateTime?
+  jiraUpdatedAt DateTime?
+  deleted       Boolean   @default(false)
+  deletedAt     DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model JiraSyncAudit {
+  id           String    @id @default(cuid())
+  source       String    // 'app' | 'jira'
+  jiraKey      String
+  appId        String?
+  fieldsChanged String[]
+  diff         Json
+  status       String    // 'applied' | 'skipped' | 'conflict' | 'failed'
+  createdAt    DateTime  @default(now())
+}
+
+// Internal Project Management Models
+model Project {
+  id          String   @id @default(cuid())
+  name        String
+  about       String
+  status      String   @default("Not Started") // Not Started | In Progress | Completed
+  userStories UserStory[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model UserStory {
+  id                  String   @id @default(cuid())
+  projectId           String
+  project             Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  storyNumber         Int      // For generating US1, US2, etc.
+  title               String
+  description         String
+  testLink            String?
+  status              String   @default("Not Started") // Not Started | In Progress | Completed
+  priority            String   @default("Medium")      // Low | Medium | High
+  acceptanceCriteria  AcceptanceCriteria[]
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  
+  @@unique([projectId, storyNumber])
+  @@index([projectId])
+}
+
+model AcceptanceCriteria {
+  id            String    @id @default(cuid())
+  userStoryId   String
+  userStory     UserStory @relation(fields: [userStoryId], references: [id], onDelete: Cascade)
+  criteriaNumber Int       // For generating AC1, AC2, etc.
+  description   String
+  status        String    @default("Not Started") // Not Started | In Progress | Completed
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  @@unique([userStoryId, criteriaNumber])
+  @@index([userStoryId])
+}

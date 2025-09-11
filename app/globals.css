@@ -23,6 +23,7 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  overflow: hidden; /* prevent page scroll; app manages scroll areas */
 }
 
 /* CodeMirror dark overrides to ensure a true black floating editor */
@@ -72,6 +73,9 @@ body {
   background: #0b0b0b; /* match editor background */
   overflow: hidden;
 }
+
+/* App root container (Next.js root) safety */
+#__next, #__root { height: 100vh; overflow: hidden; }
 .editor-card .cm-editor, .panel-card .cm-editor { background-color: transparent !important; border-radius: 12px; }
 .editor-card .cm-gutters, .panel-card .cm-gutters { background-color: transparent !important; }
 .editor-card .cm-scroller, .panel-card .cm-scroller { height: 100% !important; }

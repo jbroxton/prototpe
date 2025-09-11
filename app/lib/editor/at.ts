@@ -36,7 +36,7 @@ function iosPrdTemplate(feature?: string) {
   );
 }
 
-function source(context: CompletionContext) {
+export function atSource(context: CompletionContext) {
   const word = context.matchBefore(/@[A-Za-z0-9\- ]*$/);
   if (!word && !context.explicit) return null;
   const from = word ? word.from : context.pos;
@@ -70,4 +70,4 @@ function source(context: CompletionContext) {
   };
 }
 
-export const atMentions = autocompletion({ override: [source], icons: false, closeOnBlur: true });
+export const atMentions = autocompletion({ override: [atSource], icons: false, closeOnBlur: true });

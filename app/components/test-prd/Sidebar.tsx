@@ -1,9 +1,11 @@
 "use client";
 
-import { Folder, Image as ImageIcon, Plus, Search, Blocks } from "lucide-react";
+import { Folder, Image as ImageIcon, Plus, Search, Blocks, Star } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 export function TestPrdSidebar({ onInsert, pages }: { onInsert?: (type: "cuj" | "req" | "ac" | "milestone") => void; pages?: string[] }) {
+  const router = useRouter();
   const [tab, setTab] = useState<"pages" | "assets">("pages");
   // Session-persisted pages list (demo only)
   const storageKey = 'pages:list';
@@ -17,17 +19,24 @@ export function TestPrdSidebar({ onInsert, pages }: { onInsert?: (type: "cuj" | 
   useEffect(()=>{
     try { sessionStorage.setItem(storageKey, JSON.stringify(pageList)); } catch {}
   }, [pageList]);
+  // Starred pages (mock)
+  const starredKey = 'pages:starred';
+  const [starred, setStarred] = useState<string[]>(() => {
+    try { const v=sessionStorage.getItem(starredKey); if(v) return JSON.parse(v); } catch {}
+    return [];
+  });
+  useEffect(()=>{ try{ sessionStorage.setItem(starredKey, JSON.stringify(starred)); }catch{} }, [starred]);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const inputRef = useRef<HTMLInputElement|null>(null);
   useEffect(()=>{ if (editingIndex!==null) { const i=inputRef.current; if(i){ requestAnimationFrame(()=>{ i.focus(); i.select(); }); } } }, [editingIndex]);
   return (
     <div className="panel-shell">
-      <aside className="panel-card flex flex-col">
-        <div className="px-3 py-2 flex items-center gap-2">
+      <aside className="panel-card flex flex-col overflow-hidden">
+        <div className="flex-shrink-0 px-3 py-2 flex items-center gap-2">
           <button onClick={()=>setTab('pages')} className={`px-2 py-1 rounded-md text-xs border ${tab==='pages' ? 'bg-neutral-800 border-white/10' : 'border-transparent hover:bg-neutral-800/60'}`}>Pages</button>
           <button onClick={()=>setTab('assets')} className={`px-2 py-1 rounded-md text-xs border ${tab==='assets' ? 'bg-neutral-800 border-white/10' : 'border-transparent hover:bg-neutral-800/60'}`}>Assets</button>
         </div>
-        <div className="p-3">
+        <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-3">
           <div className="relative mb-3">
             <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500" />
             <input className="w-full pl-8 pr-2 py-1.5 rounded-md bg-neutral-800 border border-white/10 text-sm placeholder:text-neutral-500" placeholder="Search" />
@@ -36,26 +45,64 @@ export function TestPrdSidebar({ onInsert, pages }: { onInsert?: (type: "cuj" | 
             <div>
               <div className="text-xs uppercase tracking-wide text-neutral-400 mb-2">Pages</div>
               <div className="space-y-1 text-sm">
-                {pageList.map((p, idx) => (
-                  <div key={`${p}-${idx}`} className="w-full px-2 py-1.5 rounded-md hover:bg-neutral-800/60 inline-flex items-center gap-2">
-                    <Folder className="w-4 h-4 text-neutral-500" />
-                    {editingIndex===idx ? (
-                      <input
-                        ref={inputRef}
-                        defaultValue={p}
-                        className="flex-1 min-w-0 bg-transparent outline-none border border-indigo-500 rounded px-1 py-0.5"
-                        onBlur={(e)=>{ const v=e.currentTarget.value.trim()||p; const next=[...pageList]; next[idx]=v; setPageList(next); setEditingIndex(null); }}
-                        onKeyDown={(e)=>{ if(e.key==='Enter'){ (e.target as HTMLInputElement).blur(); } if(e.key==='Escape'){ setEditingIndex(null); } }}
-                      />
-                    ) : (
-                      <button onDoubleClick={()=>setEditingIndex(idx)} className="flex-1 text-left truncate">{p}</button>
-                    )}
-                  </div>
-                ))}
+                {pageList.map((p, idx) => {
+                  const isStarred = starred.includes(p);
+                  return (
+                    <div key={`${p}-${idx}`} className="w-full px-2 py-1.5 rounded-md hover:bg-neutral-800/60 inline-flex items-center gap-2">
+                      <Folder className="w-4 h-4 text-neutral-500" />
+                      {editingIndex===idx ? (
+                        <input
+                          ref={inputRef}
+                          defaultValue={p}
+                          className="flex-1 min-w-0 bg-transparent outline-none border border-indigo-500 rounded px-1 py-0.5"
+                          onBlur={(e)=>{ const v=e.currentTarget.value.trim()||p; const next=[...pageList]; next[idx]=v; setPageList(next); setEditingIndex(null); }}
+                          onKeyDown={(e)=>{ if(e.key==='Enter'){ (e.target as HTMLInputElement).blur(); } if(e.key==='Escape'){ setEditingIndex(null); } }}
+                        />
+                      ) : (
+                        <button onDoubleClick={()=>setEditingIndex(idx)} className="flex-1 text-left truncate">{p}</button>
+                      )}
+                      <button
+                        title={isStarred? 'Unstar':'Star'}
+                        onClick={()=>{
+                          setStarred(prev => prev.includes(p) ? prev.filter(x=>x!==p) : [...prev, p]);
+                        }}
+                        className={`ml-1 p-1 rounded hover:bg-neutral-800/60 ${isStarred? 'text-neutral-400':'text-neutral-500'}`}
+                      >
+                        <Star className="w-4 h-4" fill={isStarred? 'currentColor':'none'} />
+                      </button>
+                    </div>
+                  );
+                })}
                 <button className="w-full text-left px-2 py-1.5 rounded-md hover:bg-neutral-800/60 inline-flex items-center gap-2" onClick={()=>{ const base='Untitled Page'; let n=pageList.length+1; const name = pageList.includes(base) ? `${base} ${n}` : base; setPageList([...pageList, name]); setEditingIndex(pageList.length); }}>
                   <Plus className="w-4 h-4 text-neutral-500" />
                   <span>New page</span>
                 </button>
+              </div>
+              {/* Starred (matches Home sidebar) */}
+              <div className="mt-4">
+                <div className="text-xs uppercase tracking-wide text-neutral-400 mb-2">Starred</div>
+                <nav className="text-sm space-y-1">
+                  <button
+                    className="w-full text-left px-2 py-1.5 rounded-md hover:bg-neutral-800/60 inline-flex items-center gap-2"
+                    onClick={()=>router.push('/requirements/1001')}
+                  >
+                    <Star className="w-4 h-4 text-neutral-400" />
+                    <span className="truncate">Add‑on Recommendations PRD</span>
+                  </button>
+                  <button
+                    className="w-full text-left px-2 py-1.5 rounded-md hover:bg-neutral-800/60 inline-flex items-center gap-2"
+                    onClick={()=>router.push('/roadmap/2001')}
+                  >
+                    <Star className="w-4 h-4 text-neutral-400" />
+                    <span className="truncate">2025 Consumer Roadmap</span>
+                  </button>
+                  <button
+                    className="w-full text-left px-2 py-1.5 rounded-md hover:bg-neutral-800/60 inline-flex items-center gap-2"
+                  >
+                    <Star className="w-4 h-4 text-neutral-400" />
+                    <span className="truncate">iOS Dark Mode</span>
+                  </button>
+                </nav>
               </div>
             </div>
           ) : (

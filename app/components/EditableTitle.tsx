@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 
-type Kind = "req" | "roadmap" | "okrs";
+type Kind = "req" | "roadmap" | "okrs" | "launch";
 
 export function EditableTitle({
   id,
@@ -88,10 +88,11 @@ export function EditableTitle({
       >
         {value}
       </button>
-      <button className="px-2 py-1 rounded-md border border-transparent group hover:border-white/10 hover:bg-white/5 text-xs" title="Menu (stub)">
-        ▾
-      </button>
+      {type !== 'launch' && (
+        <button className="px-2 py-1 rounded-md border border-transparent group hover:border-white/10 hover:bg-white/5 text-xs" title="Menu (stub)">
+          ▾
+        </button>
+      )}
     </div>
   );
 }
-

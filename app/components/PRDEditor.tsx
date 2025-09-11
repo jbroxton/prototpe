@@ -7,9 +7,9 @@ import { EditorView } from "@codemirror/view";
 
 const CodeMirror = dynamic(() => import("@uiw/react-codemirror"), { ssr: false });
 
-type Props = { value: string; onChange: (v: string) => void; onOpenPrototype?: () => void };
+type Props = { value: string; onChange: (v: string) => void; onOpenPrototype?: () => void; autoGrow?: boolean; hideTitle?: boolean };
 
-export function PRDEditor({ value, onChange, onOpenPrototype }: Props) {
+export function PRDEditor({ value, onChange, onOpenPrototype, autoGrow, hideTitle }: Props) {
   const [extensions, setExtensions] = useState<any[]>([]);
   const wrapRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -34,9 +34,11 @@ export function PRDEditor({ value, onChange, onOpenPrototype }: Props) {
   }, []);
 
   return (
-    <div className="h-full min-h-0 flex flex-col overflow-hidden" ref={wrapRef}
+    <div
+      className={`${autoGrow ? '' : 'h-full min-h-0 overflow-hidden'} flex flex-col`}
+      ref={wrapRef}
       onWheel={(e) => {
-        // Ensure wheel always scrolls the internal scroller
+        if (autoGrow) return; // allow page to scroll
         const scroller = wrapRef.current?.querySelector<HTMLElement>(".cm-scroller");
         if (scroller) {
           scroller.scrollTop += e.deltaY;
@@ -44,17 +46,18 @@ export function PRDEditor({ value, onChange, onOpenPrototype }: Props) {
         }
       }}
     >
-      <div className="px-3 py-2 border-b border-white/10 flex items-center justify-between bg-black/60 text-white">
-        <div className="font-medium">PRD Editor</div>
-        <div className="flex items-center gap-2">
-          <div className="text-xs opacity-70">Markdown</div>
-          <button onClick={onOpenPrototype} className="ml-2 px-2 py-1 rounded-md border border-white/10 bg-indigo-600 text-white text-xs">Prototype</button>
+      {!hideTitle && (
+        <div className="px-3 py-2 flex items-center justify-between text-white">
+          <div className="font-medium">PRD Editor</div>
+          <div className="flex items-center gap-2">
+            <button onClick={onOpenPrototype} className="ml-2 px-2 py-1 rounded-md border border-white/10 bg-indigo-600 text-white text-xs">Prototype</button>
+          </div>
         </div>
-      </div>
-      <div className="flex-1 min-h-0 overflow-hidden">
+      )}
+      <div className={`${autoGrow ? '' : 'flex-1 min-h-0 overflow-hidden'}`}>
         <CodeMirror
           value={value}
-          height="100%"
+          height={autoGrow ? "auto" : "100%"}
           theme={undefined}
           basicSetup={{ lineNumbers: false, foldGutter: false }}
           extensions={extensions}
