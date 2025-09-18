@@ -56,7 +56,7 @@ services:
       - key: JIRA_EPIC_ISSUE_TYPE
         value: Epic
     region: oregon
-    plan: starter
+    plan: free
 
   # MCP Server
   - type: web
@@ -73,4 +73,4 @@ services:
       - key: NEXT_PUBLIC_APP_BASE_URL
         value: https://speqq-app.onrender.com
     region: oregon
-    plan: starter
+    plan: free
