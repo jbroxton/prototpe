@@ -2,7 +2,7 @@ databases:
   - name: speqq-db
     databaseName: speqq
     region: oregon
-    plan: starter
+    plan: free
 
 services:
   # Main Speqq Next.js Application
