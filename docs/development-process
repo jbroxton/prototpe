@@ -1,0 +1,228 @@
+# Software Development Process
+
+## About
+
+A streamlined 6-stage process for developing software features using our Internal Projects tool. This process ensures clear ownership, consistent communication, and quality delivery through defined stages from project initiation to code completion. Each stage has a single owner responsible for specific deliverables, with explicit handoffs between Engineer and Engineering Manager roles.
+
+## Rules
+
+### Engineer Rules
+1. **Sequential Stages Only** - Never skip stages or work ahead
+2. **Tool First** - Always update Internal Projects tool BEFORE sending status emails  
+3. **TDD Required** - Write failing tests first, then implementation
+4. **OSS-Only Rule** - NEVER write custom code. Use existing libraries, SDKs, and frameworks exactly as documented
+5. **NextJS/TS Maximization** - Use every available feature and capability
+6. **Stage Compliance** - Include [STAGE #: NAME] in every email subject
+
+### Engineering Manager Rules
+1. **Specific Feedback** - Never say "needs work" - provide exact changes required
+2. **Test Verification** - Must run tests locally before approving any completion
+3. **Tool Updates** - Change status immediately after decisions
+4. **OSS Enforcement** - REJECT any custom code immediately
+5. **Quality Gates** - Complete review checklists before approval
+
+### Universal Rules
+1. **Single Owner** - Each stage has one owner who must complete it
+2. **Written Trail** - All decisions documented via email
+3. **Tool Accuracy** - Internal Projects tool is source of truth for project status
+
+## Process
+
+### STAGE 1: PROJECT INITIATION
+**Owner:** Either Engineer or Engineering Manager can initiate  
+**Purpose:** Identify business need and create initial project scope  
+**Outcome:** Agreed project plan with clear scope and rationale
+
+**Process:**
+1. **Initiator** creates project scope email with:
+   - Project name and priority
+   - Business context and rationale  
+   - Timeline expectations
+2. **Other party** reviews and replies with either:
+   - "APPROVED" (to proceed to Stage 2)
+   - "REVISE: [specific changes needed]" (to request changes)
+3. If revisions needed, initiator makes changes and resends until other party replies "APPROVED"
+4. **Handoff:** Once approved, **Engineer takes ownership** for Stage 2
+
+**Email Subject:** [STAGE 1: PROJECT INITIATION] - {Project Name} - {DRAFT/APPROVED}  
+**Tool Action:** None - project will be created in Stage 2  
+**Next Stage:** Engineer owns Stage 2 (Overview Draft)
+
+---
+
+### STAGE 2: OVERVIEW DRAFT & APPROVAL
+**Owner:** Engineer (drafts), Engineering Manager (approves)  
+**Purpose:** Create comprehensive project overview with user pain points, current state, and high-level solution  
+**Outcome:** Approved overview added to Internal Projects tool as project foundation
+
+**Engineer Tasks:**
+1. Research codebase and analyze problem
+2. Create overview with 5 sections:
+   - **Objective:** Business goals and success metrics
+   - **User Pain Points:** Specific problems users face
+   - **Current State:** Existing implementation and issues  
+   - **Users:** Who uses this and their needs
+   - **Solution:** High-level approach and expected outcomes
+3. Send overview for manager approval
+
+**Manager Tasks:**
+1. Review overview for technical feasibility and appropriate scope
+2. Verify user pain points are accurate and well-defined
+3. Reply with either:
+   - "APPROVED" (to proceed to Stage 3)
+   - "REVISE: [specific changes needed]" (Engineer must revise and resubmit)
+4. **If approved:** Create project in Internal Projects tool with:
+   - **Name:** {Project Name}
+   - **About:** {Full overview text}
+   - **Status:** "Draft"
+5. **Handoff:** Engineering Manager takes ownership for Stage 3
+
+**Email Subject:** [STAGE 2: OVERVIEW DRAFT] - {Project Name} - {DRAFT/APPROVED}  
+**Tool Action:** Manager creates project in Internal Projects tool if approved  
+**Next Stage:** Engineering Manager owns Stage 3 (User Stories & Acceptance Criteria)
+
+---
+
+### STAGE 3: USER STORIES & ACCEPTANCE CRITERIA
+**Owner:** Engineering Manager (requests), Engineer (drafts), Engineering Manager (approves)  
+**Purpose:** Break down solution into specific, testable User Stories with clear Acceptance Criteria  
+**Outcome:** Approved User Stories and ACs added to Internal Projects tool
+
+**Manager Tasks (Start):**
+1. Request Engineer to draft User Stories and ACs based on approved overview
+2. **Handoff:** Engineer takes ownership to draft
+
+**Engineer Tasks:**
+1. Break down approved solution into User Stories
+2. Write specific, testable Acceptance Criteria for each story
+3. Ensure each AC is measurable and verifiable
+4. Submit for manager approval
+5. **Handoff:** Engineering Manager takes ownership to review
+
+**Manager Tasks (Review):**
+1. Complete Requirements Review Checklist for each AC:
+   - AC Clarity: Is it clearly written and unambiguous? [PASS/FAIL: reason]
+   - Testability: Can this AC be verified with a specific test? [PASS/FAIL: reason]  
+   - Scope Alignment: Does this AC align with approved overview? [PASS/FAIL: reason]
+   - Single Outcome: Does this AC test exactly one behavior? [PASS/FAIL: reason]
+   - Measurable: Can success/failure be objectively determined? [PASS/FAIL: reason]
+2. Reply with either:
+   - "APPROVED" (to proceed to Stage 4)
+   - "REVISE: [specific AC changes needed]" (Engineer must revise and resubmit)
+3. **If approved:** Add all User Stories and ACs to Internal Projects tool with:
+   - **Status:** "Ready for Testing"
+4. **Handoff:** Engineer takes ownership for Stage 4
+
+**Email Subject:** [STAGE 3: USER STORIES] - {Project Name} - {DRAFT/APPROVED}  
+**Tool Action:** Manager adds User Stories and ACs to Internal Projects tool if approved  
+**Next Stage:** Engineer owns Stage 4 (Test-Driven Development)
+
+---
+
+### STAGE 4: TEST-DRIVEN DEVELOPMENT
+**Owner:** Engineer (drafts), Engineering Manager (approves)  
+**Purpose:** Create comprehensive Jest test suite that validates all Acceptance Criteria  
+**Outcome:** Approved test suite added to Internal Projects tool, ACs and User Stories set to "In Progress"
+
+**Engineer Tasks:**
+1. Write failing Jest tests for each Acceptance Criteria (one test per AC)
+2. Ensure tests verify AC behavior, not implementation details
+3. Submit test suite for manager approval
+4. **Handoff:** Engineering Manager takes ownership to review
+
+**Manager Tasks:**
+1. Review each test against its corresponding AC
+2. Verify tests actually validate the user behavior described
+3. Check test quality and coverage
+4. Reply with either:
+   - "APPROVED" (to proceed to Stage 5)
+   - "REVISE: [specific test changes needed]" (Engineer must revise and resubmit)
+5. **If approved:** Add test links to Internal Projects tool for each AC with:
+   - **Test Link Format:** "test-file.test.js:line-number"
+   - **AC Status:** "In Progress"
+   - **User Story Status:** "In Progress"
+6. **Handoff:** Engineer takes ownership for Stage 5
+
+**Email Subject:** [STAGE 4: TDD] - {Project Name} - {DRAFT/APPROVED}  
+**Tool Action:** Manager adds test links and updates status if approved  
+**Next Stage:** Engineer owns Stage 5 (Design Document)
+
+---
+
+### STAGE 5: DESIGN DOCUMENT
+**Owner:** Engineer (drafts), Engineering Manager (approves)  
+**Purpose:** Create detailed technical design showing how to implement the solution using OSS libraries and NextJS/TypeScript features  
+**Outcome:** Approved design document that guides implementation
+
+**Engineer Tasks:**
+1. Create design document with:
+   - Architecture overview using OSS libraries only
+   - NextJS features to be used (App Router, Server Components, etc.)
+   - TypeScript patterns and advanced types
+   - Component structure and data flow
+   - API design and integration points
+2. Justify all OSS library choices
+3. Submit for manager approval
+4. **Handoff:** Engineering Manager takes ownership to review
+
+**Manager Tasks:**
+1. Verify ZERO custom code in design
+2. Check that NextJS and TypeScript are maximized
+3. Validate OSS library choices are appropriate
+4. Ensure design aligns with approved User Stories
+5. Reply with either:
+   - "APPROVED" (to proceed to Stage 6)
+   - "REVISE: [specific design changes needed]" (Engineer must revise and resubmit)
+6. **Handoff:** Engineer takes ownership for Stage 6
+
+**Email Subject:** [STAGE 5: DESIGN DOC] - {Project Name} - {DRAFT/APPROVED}  
+**Tool Action:** None  
+**Next Stage:** Engineer owns Stage 6 (Implementation)
+
+---
+
+### STAGE 6: IMPLEMENTATION & COMPLETION
+**Owner:** Engineer (implements), Engineering Manager (reviews and completes)  
+**Purpose:** Implement the approved design and complete the project  
+**Outcome:** Working code that passes all tests and meets all quality standards
+
+**Engineer Tasks:**
+1. Implement code following approved design
+2. Make tests pass one by one
+3. Request testing when User Stories are complete
+4. Provide test commands and coverage information
+5. **Handoff:** Engineering Manager takes ownership to review
+
+**Manager Tasks:**
+1. Run all tests locally and verify they pass
+2. Complete Code Review Checklist (ALL must be PASS):
+   - Test Coverage: Does each AC have exactly one corresponding Jest test? [PASS/FAIL: details]
+   - Test Validity: Do tests actually verify AC behavior? [PASS/FAIL: details]  
+   - Code-AC Alignment: Does implementation fulfill every AC requirement? [PASS/FAIL: details]
+   - Nesting Depth: No more than 3 levels of nesting [PASS/FAIL: details]
+   - Function Length: Functions under 20 lines [PASS/FAIL: details]
+   - Component Complexity: React components under 100 lines, single responsibility [PASS/FAIL: details]
+   - OSS ONLY: ZERO custom code allowed [PASS/FAIL: details]
+   - No Duplication: Zero duplicate code blocks [PASS/FAIL: details]
+   - Type Safety: No `any` types without justification [PASS/FAIL: details]
+   - Error Handling: All async operations have proper error handling [PASS/FAIL: details]
+   - Dead Code: No unused imports, variables, or commented-out code [PASS/FAIL: details]
+3. Auto-Reject Criteria (Must Be Zero):
+   - Functions over 30 lines: [Count: X]
+   - Nesting deeper than 4 levels: [Count: X]  
+   - Duplicate code blocks: [Count: X]
+   - Missing error handling on API calls: [Count: X]
+   - Unused imports or dead code: [Count: X]
+   - Custom code implementations: [Count: X] - MUST BE ZERO
+4. Reply with either:
+   - "APPROVED" (project is complete)
+   - "REVISE: [specific code changes needed]" (Engineer must fix and resubmit)
+5. **If approved:** Mark all ACs and User Stories as "Completed" in Internal Projects tool with:
+   - **AC Status:** "Completed"
+   - **User Story Status:** "Completed"
+   - **Project Status:** "Completed"
+
+**Email Subject:** [STAGE 6: IMPLEMENTATION] - {Project Name} - {IN PROGRESS/TESTING REQUEST/COMPLETED}  
+**Tool Action:** Manager marks all items "Completed" in Internal Projects tool after approval  
+**Next Stage:** Project Complete
+

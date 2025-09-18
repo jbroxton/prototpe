@@ -344,5 +344,96 @@ describe('Internal Projects API', () => {
       const json = await (res as any).json();
       expect(json.error).toMatch(/Invalid JSON/);
     });
+
+    // -----------------------------
+    // Test Links (AC) - Failing TDD
+    // -----------------------------
+    describe('AC Test Links (TDD - expected to fail initially)', () => {
+      let pid: string = '';
+      beforeAll(async () => {
+        const createReq = makeReq(`${baseUrl}/api/internal-projects`, 'POST', {
+          name: `TestLinks Project - ${Date.now()}`,
+          about: 'Temp project for AC testLink TDD',
+          status: 'Not Started',
+        });
+        const res = await projectsApi.POST(createReq as any);
+        const json = await (res as any).json();
+        pid = json.data.id as string;
+        // Add a baseline story
+        await storiesApi.POST(makeReq(`${baseUrl}/api/internal-projects/stories`, 'POST', {
+          projectId: pid,
+          action: 'add',
+          story: { title: 'Story', description: 'D', status: 'Not Started', priority: 'Low' },
+        }) as any);
+      });
+      afterAll(async () => {
+        if (pid) await projectsApi.DELETE(makeReq(`${baseUrl}/api/internal-projects?projectId=${pid}`, 'DELETE') as any);
+      });
+
+      it('should create AC with a valid testLink and return it', async () => {
+        const req = makeReq(`${baseUrl}/api/internal-projects/stories`, 'PUT', {
+          projectId: pid,
+          storyId: 'US1',
+          action: 'add',
+          acceptanceCriteria: {
+            description: 'AC with link',
+            status: 'Not Started',
+            testLink: 'https://example.com/demo'
+          }
+        });
+        const res = await storiesApi.PUT(req as any);
+        const json = await (res as any).json();
+        expect(json.success).toBe(true);
+        expect(json.data).toHaveProperty('testLink', 'https://example.com/demo');
+      });
+
+      it('should update AC testLink and then clear it with empty string', async () => {
+        // First add AC
+        await storiesApi.PUT(makeReq(`${baseUrl}/api/internal-projects/stories`, 'PUT', {
+          projectId: pid, storyId: 'US1', action: 'add',
+          acceptanceCriteria: { description: 'AC to update link', status: 'Not Started' }
+        }) as any);
+        // Update link
+        let res = await storiesApi.PUT(makeReq(`${baseUrl}/api/internal-projects/stories`, 'PUT', {
+          projectId: pid,
+          storyId: 'US1',
+          action: 'update',
+          acceptanceCriteria: { id: 'AC2', testLink: 'https://example.com/updated' }
+        }) as any);
+        let json = await (res as any).json();
+        expect(json.success).toBe(true);
+        expect(json.data).toHaveProperty('testLink', 'https://example.com/updated');
+        // Clear
+        res = await storiesApi.PUT(makeReq(`${baseUrl}/api/internal-projects/stories`, 'PUT', {
+          projectId: pid,
+          storyId: 'US1',
+          action: 'update',
+          acceptanceCriteria: { id: 'AC2', testLink: '' }
+        }) as any);
+        json = await (res as any).json();
+        expect(json.success).toBe(true);
+        expect(json.data).toHaveProperty('testLink', null);
+      });
+
+      it('should reject invalid testLink schemes and excessive length', async () => {
+        // invalid scheme
+        let res = await storiesApi.PUT(makeReq(`${baseUrl}/api/internal-projects/stories`, 'PUT', {
+          projectId: pid, storyId: 'US1', action: 'add',
+          acceptanceCriteria: { description: 'bad link', status: 'Not Started', testLink: 'ftp://bad/link' }
+        }) as any);
+        expect((res as any).status).toBe(400);
+        let body = await (res as any).json();
+        expect(body.error || '').toMatch(/testLink/i);
+        // too long
+        const longUrl = 'https://example.com/' + 'a'.repeat(2050);
+        res = await storiesApi.PUT(makeReq(`${baseUrl}/api/internal-projects/stories`, 'PUT', {
+          projectId: pid, storyId: 'US1', action: 'add',
+          acceptanceCriteria: { description: 'long link', status: 'Not Started', testLink: longUrl }
+        }) as any);
+        expect((res as any).status).toBe(400);
+        body = await (res as any).json();
+        expect(body.error || '').toMatch(/testLink/i);
+      });
+    });
   });
 });

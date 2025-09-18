@@ -123,6 +123,7 @@ model Project {
   name        String
   about       String
   status      String   @default("Not Started") // Not Started | In Progress | Completed
+  releases    Release[]
   userStories UserStory[]
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -132,6 +133,8 @@ model UserStory {
   id                  String   @id @default(cuid())
   projectId           String
   project             Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  releaseId           String?
+  release             Release? @relation(fields: [releaseId], references: [id], onDelete: SetNull)
   storyNumber         Int      // For generating US1, US2, etc.
   title               String
   description         String
@@ -144,6 +147,7 @@ model UserStory {
   
   @@unique([projectId, storyNumber])
   @@index([projectId])
+  @@index([releaseId])
 }
 
 model AcceptanceCriteria {
@@ -153,9 +157,29 @@ model AcceptanceCriteria {
   criteriaNumber Int       // For generating AC1, AC2, etc.
   description   String
   status        String    @default("Not Started") // Not Started | In Progress | Completed
+  testLink      String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   
   @@unique([userStoryId, criteriaNumber])
   @@index([userStoryId])
+}
+
+model Release {
+  id            String     @id @default(cuid())
+  projectId     String
+  project       Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  releaseNumber Int
+  name          String
+  status        String     @default("Not Started") // Not Started | In Progress | In Review | Completed
+  about         String?
+  notes         String?
+  startDate     DateTime?
+  targetDate    DateTime?
+  userStories   UserStory[]
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  @@unique([projectId, releaseNumber])
+  @@index([projectId])
 }

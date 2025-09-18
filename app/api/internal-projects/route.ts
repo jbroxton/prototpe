@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidateTag } from 'next/cache';
 import { prisma } from "@/app/lib/prisma";
 
 const VALID_STATUSES = ["Not Started", "In Progress", "In Review", "Completed"] as const;
@@ -9,6 +10,11 @@ const managerOk = (request: NextRequest) => {
   return required && token === required;
 };
 const VALID_PRIORITIES = ["Low", "Medium", "High"] as const;
+const CACHE_TAGS = ['mcp-status', 'mcp-parity'];
+
+function revalidateInternalProjects() {
+  CACHE_TAGS.forEach((tag) => revalidateTag(tag));
+}
 
 // GET /api/internal-projects - List all projects
 export async function GET(request: NextRequest) {
@@ -119,7 +125,8 @@ export async function POST(request: NextRequest) {
         userStories: true
       }
     });
-    
+    revalidateInternalProjects();
+
     return NextResponse.json({
       success: true,
       data: project,
@@ -182,6 +189,7 @@ export async function PUT(request: NextRequest) {
         }
       }
     });
+    revalidateInternalProjects();
     
     // Handle user stories updates if provided
     if (userStories && Array.isArray(userStories)) {
@@ -220,7 +228,8 @@ export async function DELETE(request: NextRequest) {
     await prisma.project.delete({
       where: { id: projectId }
     });
-    
+    revalidateInternalProjects();
+
     return NextResponse.json({
       success: true,
       message: "Project deleted successfully"

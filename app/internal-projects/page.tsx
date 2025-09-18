@@ -2,7 +2,12 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-
+import { Button } from "@/components/ui/button";
+import { Select } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { DataTable } from "@/components/ui/data-table";
+import type { ColumnDef } from "@tanstack/react-table";
 interface Project {
   id: string;
   name: string;
@@ -20,9 +25,15 @@ export default function InternalProjectsPage() {
   const [filter, setFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState<"name" | "status" | "updated">("updated");
   const [searchTerm, setSearchTerm] = useState("");
+  const [starred, setStarred] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     fetchProjects();
+    // Load starred set from localStorage
+    try {
+      const raw = localStorage.getItem('internal-projects:starred');
+      if (raw) setStarred(new Set(JSON.parse(raw)));
+    } catch {}
   }, []);
 
   const fetchProjects = async () => {
@@ -65,6 +76,18 @@ export default function InternalProjectsPage() {
     }
   };
 
+  const persistStarred = (next: Set<string>) => {
+    try { localStorage.setItem('internal-projects:starred', JSON.stringify(Array.from(next))); } catch {}
+  };
+  const toggleStar = (id: string) => {
+    setStarred(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      persistStarred(next);
+      return next;
+    });
+  };
+
   const filteredProjects = projects
     .filter((p) => {
       if (filter !== "all" && p.status !== filter) return false;
@@ -73,11 +96,68 @@ export default function InternalProjectsPage() {
       return true;
     })
     .sort((a, b) => {
+      // Starred projects always on top
+      const aStar = starred.has(a.id) ? 1 : 0;
+      const bStar = starred.has(b.id) ? 1 : 0;
+      if (aStar !== bStar) return bStar - aStar; // starred first
+      // Then secondary sort by selected key
       if (sortBy === "name") return a.name.localeCompare(b.name);
       if (sortBy === "status") return a.status.localeCompare(b.status);
       if (sortBy === "updated") return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
       return 0;
     });
+
+  type Row = {
+    id: string;
+    name: string;
+    about: string;
+    status: Project["status"];
+    progress: string;
+    updatedAt: string;
+  };
+
+  const rows: Row[] = filteredProjects.map(p => ({
+    id: p.id,
+    name: p.name,
+    about: p.about,
+    status: p.status,
+    progress: `${p.completedStoryCount}/${p.userStoryCount} stories`,
+    updatedAt: p.updatedAt,
+  }));
+
+  const columns: ColumnDef<Row>[] = [
+    { accessorKey: 'name', header: 'Project Name', cell: ({ row }) => (
+      <div className="font-medium flex items-center">
+        <button
+          aria-label={starred.has(row.original.id) ? 'Unstar project' : 'Star project'}
+          title={starred.has(row.original.id) ? 'Unstar' : 'Star'}
+          onClick={() => toggleStar(row.original.id)}
+          className={`mr-2 text-yellow-400 hover:scale-110 transition-transform ${starred.has(row.original.id) ? '' : 'opacity-40'}`}
+        >
+          {starred.has(row.original.id) ? '★' : '☆'}
+        </button>
+        {row.original.name}
+      </div>
+    ) },
+    { accessorKey: 'status', header: 'Status', cell: ({ row }) => (
+      <Badge
+        variant={
+          row.original.status === 'Completed' ? 'success' :
+          row.original.status === 'In Progress' ? 'warning' :
+          row.original.status === 'In Review' ? 'default' : 'secondary'
+        }
+      >
+        {row.original.status}
+      </Badge>
+    ) },
+    { accessorKey: 'progress', header: 'Progress' },
+    { accessorKey: 'updatedAt', header: 'Updated', cell: ({ row }) => (
+      <span className="text-neutral-400">{new Date(row.original.updatedAt).toLocaleDateString()}</span>
+    ) },
+    { id: 'actions', header: 'Actions', cell: ({ row }) => (
+      <Link href={`/internal-projects/${row.original.id}`} className="text-indigo-400 hover:text-indigo-300">View →</Link>
+    ) },
+  ];
 
   const exportData = () => {
     const exportFormat = {
@@ -96,7 +176,7 @@ export default function InternalProjectsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-neutral-200">
+    <div className="h-screen overflow-auto bg-neutral-950 text-neutral-200">
       <div className="max-w-7xl mx-auto p-6">
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Internal Projects</h1>
@@ -110,110 +190,48 @@ export default function InternalProjectsPage() {
         )}
 
         {/* Controls */}
-        <div className="mb-6 flex flex-wrap gap-4">
-          <input
+        <div className="mb-6 flex flex-wrap items-center gap-3">
+          <Input
             type="text"
             placeholder="Search projects..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="px-3 py-2 bg-neutral-900 border border-neutral-800 rounded-md flex-1 min-w-[200px]"
+            className="w-64"
           />
-          
-          <select
+
+          <Select
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
-            className="px-3 py-2 bg-neutral-900 border border-neutral-800 rounded-md"
           >
-            <option value="all">All Status</option>
-            <option value="Not Started">Not Started</option>
-            <option value="In Progress">In Progress</option>
-            <option value="In Review">In Review</option>
+            <option value="all">All status</option>
+            <option value="Not Started">Not started</option>
+            <option value="In Progress">In progress</option>
+            <option value="In Review">In review</option>
             <option value="Completed">Completed</option>
-          </select>
+          </Select>
 
-          <select
+          <Select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as any)}
-            className="px-3 py-2 bg-neutral-900 border border-neutral-800 rounded-md"
           >
-            <option value="updated">Sort by Updated</option>
-            <option value="name">Sort by Name</option>
-            <option value="status">Sort by Status</option>
-          </select>
+            <option value="updated">Sort: Updated</option>
+            <option value="name">Sort: Name</option>
+            <option value="status">Sort: Status</option>
+          </Select>
 
-          <button
-            onClick={createNewProject}
-            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-md font-medium"
-          >
+          <Button onClick={createNewProject} size="sm">
             New Project
-          </button>
+          </Button>
 
-          <Link
-            href="/internal-projects/view"
-            className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-md font-medium"
-          >
-            Unified View
-          </Link>
+          {/* Unified View removed per product decision: dense view is per-project */}
 
-          <button
-            onClick={exportData}
-            className="px-4 py-2 bg-neutral-800 hover:bg-neutral-700 rounded-md"
-          >
+          <Button variant="outline" size="sm" onClick={exportData}>
             Export JSON
-          </button>
+          </Button>
         </div>
 
         {/* Projects Table */}
-        <div className="bg-neutral-900 rounded-lg overflow-hidden">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-neutral-800">
-                <th className="text-left p-4">Project Name</th>
-                <th className="text-left p-4">About</th>
-                <th className="text-left p-4">Status</th>
-                <th className="text-left p-4">Progress</th>
-                <th className="text-left p-4">Updated</th>
-                <th className="text-left p-4">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredProjects.map((project) => (
-                <tr key={project.id} className="border-b border-neutral-800 hover:bg-neutral-800/50">
-                  <td className="p-4 font-medium">{project.name}</td>
-                  <td className="p-4 text-neutral-400">{project.about}</td>
-                  <td className="p-4">
-                    <span className={`px-2 py-1 rounded-md text-xs font-medium ${
-                      project.status === "Completed" ? "bg-green-900 text-green-200" :
-                      project.status === "In Progress" ? "bg-yellow-900 text-yellow-200" :
-                      "bg-neutral-700 text-neutral-300"
-                    }`}>
-                      {project.status}
-                    </span>
-                  </td>
-                  <td className="p-4">
-                    {project.completedStoryCount}/{project.userStoryCount} stories
-                  </td>
-                  <td className="p-4 text-neutral-400">
-                    {new Date(project.updatedAt).toLocaleDateString()}
-                  </td>
-                  <td className="p-4">
-                    <Link
-                      href={`/internal-projects/${project.id}`}
-                      className="text-indigo-400 hover:text-indigo-300"
-                    >
-                      View →
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          {filteredProjects.length === 0 && (
-            <div className="p-8 text-center text-neutral-500">
-              No projects found. Create your first project to get started.
-            </div>
-          )}
-        </div>
+        <DataTable<Row, unknown> columns={columns} data={rows} />
 
         {/* Data Preview for LLM */}
         <details className="mt-8 bg-neutral-900 rounded-lg p-4">

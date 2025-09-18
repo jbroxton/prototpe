@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidateTag } from 'next/cache';
 import { prisma } from "@/app/lib/prisma";
 
 const VALID_STATUSES = ["Not Started", "In Progress", "In Review", "Completed"] as const;
@@ -9,6 +10,26 @@ const managerOk = (request: NextRequest) => {
   const required = process.env.MANAGER_TOKEN || '';
   return required && token === required;
 };
+const CACHE_TAGS = ['mcp-status', 'mcp-parity'];
+
+const revalidateInternalProjects = () => {
+  CACHE_TAGS.forEach((tag) => revalidateTag(tag));
+};
+
+function normalizeTestLink(raw: unknown): { ok: true; value: string | null | undefined } | { ok: false; error: string } {
+  if (typeof raw === 'undefined') return { ok: true, value: undefined };
+  if (raw === null) return { ok: true, value: null };
+  const str = String(raw).trim();
+  if (str === '') return { ok: true, value: null };
+  if (str.length > 2048) return { ok: false, error: 'Invalid testLink: exceeds 2048 characters' };
+  try {
+    const u = new URL(str);
+    if (u.protocol !== 'http:' && u.protocol !== 'https:') return { ok: false, error: 'Invalid testLink: must use http or https' };
+  } catch {
+    return { ok: false, error: 'Invalid testLink: must be a valid URL' };
+  }
+  return { ok: true, value: str };
+}
 
 // POST /api/internal-projects/stories - Add or update a user story
 export async function POST(request: NextRequest) {
@@ -60,8 +81,18 @@ export async function POST(request: NextRequest) {
         status: story.status || "Not Started",
         priority: story.priority || "Medium",
       };
+      // Optional: assign to a release
+      if (typeof story.releaseId !== 'undefined' && story.releaseId !== null) {
+        const rel = await prisma.release.findUnique({ where: { id: String(story.releaseId) } });
+        if (!rel || rel.projectId !== projectId) {
+          return NextResponse.json({ success: false, error: 'Invalid releaseId for this project' }, { status: 400 });
+        }
+        data.releaseId = rel.id;
+      }
       if (typeof story.testLink !== 'undefined') {
-        data.testLink = story.testLink;
+        const link = normalizeTestLink(story.testLink);
+        if (!link.ok) return NextResponse.json({ success: false, error: link.error }, { status: 400 });
+        data.testLink = link.value ?? null;
       }
 
       const newStory = await prisma.userStory.create({
@@ -74,7 +105,8 @@ export async function POST(request: NextRequest) {
         where: { id: projectId },
         data: { updatedAt: new Date() }
       });
-      
+      revalidateInternalProjects();
+
       return NextResponse.json({
         success: true,
         data: {
@@ -127,6 +159,25 @@ export async function POST(request: NextRequest) {
           error: `Invalid priority. Must be one of: ${VALID_PRIORITIES.join(', ')}`
         }, { status: 400 });
       }
+      // Validate story testLink if provided
+      if (typeof story.testLink !== 'undefined') {
+        const link = normalizeTestLink(story.testLink);
+        if (!link.ok) return NextResponse.json({ success: false, error: link.error }, { status: 400 });
+      }
+
+      // Handle release assignment updates
+      let releaseUpdate: { releaseId?: string | null } = {};
+      if (Object.prototype.hasOwnProperty.call(story, 'releaseId')) {
+        if (story.releaseId === null) {
+          releaseUpdate.releaseId = null; // move to backlog
+        } else if (story.releaseId) {
+          const rel = await prisma.release.findUnique({ where: { id: String(story.releaseId) } });
+          if (!rel || rel.projectId !== projectId) {
+            return NextResponse.json({ success: false, error: 'Invalid releaseId for this project' }, { status: 400 });
+          }
+          releaseUpdate.releaseId = rel.id;
+        }
+      }
 
       const updatedStory = await prisma.userStory.update({
         where: { id: userStory.id },
@@ -136,6 +187,7 @@ export async function POST(request: NextRequest) {
           testLink: story.testLink !== undefined ? story.testLink : userStory.testLink,
           status: story.status || userStory.status,
           priority: story.priority || userStory.priority,
+          ...releaseUpdate,
         },
         include: {
           acceptanceCriteria: true
@@ -147,7 +199,8 @@ export async function POST(request: NextRequest) {
         where: { id: projectId },
         data: { updatedAt: new Date() }
       });
-      
+      revalidateInternalProjects();
+
       return NextResponse.json({
         success: true,
         data: {
@@ -191,7 +244,8 @@ export async function POST(request: NextRequest) {
         where: { id: projectId },
         data: { updatedAt: new Date() }
       });
-      
+      revalidateInternalProjects();
+
       return NextResponse.json({
         success: true,
         message: "User story deleted successfully"
@@ -262,6 +316,11 @@ export async function PUT(request: NextRequest) {
           error: `Invalid status. Must be one of: ${VALID_STATUSES.join(', ')}`
         }, { status: 400 });
       }
+      // Validate AC testLink if provided
+      if (typeof acceptanceCriteria?.testLink !== 'undefined') {
+        const link = normalizeTestLink(acceptanceCriteria.testLink);
+        if (!link.ok) return NextResponse.json({ success: false, error: link.error }, { status: 400 });
+      }
       // Get the next criteria number
       const existingCriteria = await prisma.acceptanceCriteria.findMany({
         where: { userStoryId: userStory.id },
@@ -279,6 +338,7 @@ export async function PUT(request: NextRequest) {
           criteriaNumber: nextCriteriaNumber,
           description: acceptanceCriteria?.description || "Given..., When..., Then...",
           status: acceptanceCriteria?.status || "Not Started",
+          ...(typeof acceptanceCriteria?.testLink !== 'undefined' ? { testLink: acceptanceCriteria.testLink === '' ? null : String(acceptanceCriteria.testLink).trim() } : {}),
         }
       });
       
@@ -291,7 +351,8 @@ export async function PUT(request: NextRequest) {
         where: { id: projectId },
         data: { updatedAt: new Date() }
       });
-      
+      revalidateInternalProjects();
+
       return NextResponse.json({
         success: true,
         data: {
@@ -332,6 +393,13 @@ export async function PUT(request: NextRequest) {
           error: `Invalid status. Must be one of: ${VALID_STATUSES.join(', ')}`
         }, { status: 400 });
       }
+      // Validate AC testLink if provided
+      let acTestLink: string | null | undefined = undefined;
+      if (typeof acceptanceCriteria.testLink !== 'undefined') {
+        const link = normalizeTestLink(acceptanceCriteria.testLink);
+        if (!link.ok) return NextResponse.json({ success: false, error: link.error }, { status: 400 });
+        acTestLink = link.value ?? null;
+      }
       // Manager check disabled per CEO directive - use tool normally
       // if (isCompleted(acceptanceCriteria.status) && !managerOk(request)) {
       //   return NextResponse.json({ success: false, error: 'Only Manager can set Completed. Use In Review first.' }, { status: 403 });
@@ -342,6 +410,7 @@ export async function PUT(request: NextRequest) {
         data: {
           description: acceptanceCriteria.description || criteria.description,
           status: acceptanceCriteria.status || criteria.status,
+          ...(typeof acTestLink !== 'undefined' ? { testLink: acTestLink } : {}),
         }
       });
       
@@ -354,7 +423,8 @@ export async function PUT(request: NextRequest) {
         where: { id: projectId },
         data: { updatedAt: new Date() }
       });
-      
+      revalidateInternalProjects();
+
       return NextResponse.json({
         success: true,
         data: {
@@ -402,7 +472,8 @@ export async function PUT(request: NextRequest) {
         where: { id: projectId },
         data: { updatedAt: new Date() }
       });
-      
+      revalidateInternalProjects();
+
       return NextResponse.json({
         success: true,
         message: "Acceptance criteria deleted successfully"

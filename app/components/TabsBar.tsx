@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { PanelLeft, Columns2 } from "lucide-react";
+import { PanelLeft, Columns2, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export function TabsBar() {
   const pathname = usePathname();
@@ -76,38 +77,47 @@ export function TabsBar() {
     router.push(`/new/${id}`);
   }
   return (
-    <div className="sticky top-0 z-20">
+    <div className="sticky top-0 z-20 bg-neutral-950/80 backdrop-blur border-b border-white/10">
       <div className="px-3 py-2 flex gap-2 overflow-x-auto items-center">
         {tabs.map((t) => {
           const active = pathname === t.href;
           return (
-            <Link key={t.href} href={t.href} className={`px-3 py-1.5 rounded-md text-sm border ${active ? "bg-indigo-600 text-white border-indigo-600" : "border-white/10 text-neutral-300 hover:bg-neutral-800/60"}`}>
-              {t.label}
-            </Link>
+            <Button
+              key={t.href}
+              asChild
+              size="sm"
+              variant={active ? "default" : "outline"}
+              className={active ? "border-indigo-600" : ""}
+            >
+              <Link href={t.href} aria-current={active ? 'page' : undefined}>{t.label}</Link>
+            </Button>
           );
         })}
-        <button
+        <Button
           aria-label="Open new tab"
           title="New tab"
           onClick={openNewTab}
-          className="ml-1 p-1 text-neutral-300 hover:text-white"
+          variant="ghost"
+          size="sm"
+          className="ml-1"
         >
-          +
-        </button>
+          <Plus className="w-4 h-4" />
+        </Button>
         <div className="flex-1" />
         {/* Right controls: left = sidebar toggle, right = prototype toggle */}
-        <button
+        <Button
           aria-label="Toggle sidebar"
           title={sidebarVisible? 'Hide sidebar':'Show sidebar'}
           onClick={()=>{
             const next = !sidebarVisible; setSidebarVisible(next);
             try{ sessionStorage.setItem('ui:sidebar:visible', String(next)); window.dispatchEvent(new CustomEvent('ui:sidebar:set', { detail:{ visible: next } })); }catch{}
           }}
-          className={`p-1 inline-flex items-center text-neutral-300 hover:text-white`}
+          variant="ghost"
+          size="sm"
         >
           <PanelLeft className="w-4 h-4" />
-        </button>
-        <button
+        </Button>
+        <Button
           aria-label="Toggle prototype overlay"
           title={protoOpen? (protoWide? 'Shrink prototype':'Expand prototype') : 'Open prototype'}
           onClick={()=>{
@@ -119,10 +129,11 @@ export function TabsBar() {
               window.dispatchEvent(new CustomEvent('ui:proto:set', { detail:{ open, wide } }));
             }catch{}
           }}
-          className={`p-1 inline-flex items-center text-neutral-300 hover:text-white`}
+          variant="ghost"
+          size="sm"
         >
           <Columns2 className="w-4 h-4" />
-        </button>
+        </Button>
       </div>
     </div>
   );
