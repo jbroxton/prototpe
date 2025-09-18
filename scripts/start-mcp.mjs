@@ -10,8 +10,8 @@ if (!MCP_API_KEY) {
   process.exit(1);
 }
 
-const VALID_STATUSES = ['Not Started', 'In Progress', 'In Review', 'Completed'] as const;
-const VALID_PRIORITIES = ['Low', 'Medium', 'High'] as const;
+const VALID_STATUSES = ['Not Started', 'In Progress', 'In Review', 'Completed'];
+const VALID_PRIORITIES = ['Low', 'Medium', 'High'];
 
 const JsonEnvelopeSchema = z.object({
   success: z.boolean(),
