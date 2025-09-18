@@ -1,7 +1,6 @@
 databases:
   - name: speqq-db
     databaseName: speqq
-    databaseUser: speqq_user
     region: oregon
     plan: starter
 
