@@ -1,7 +1,7 @@
 databases:
   - name: speqq-db
     databaseName: speqq
-    user: speqq_user
+    databaseUser: speqq_user
     region: oregon
     plan: starter
 
@@ -41,7 +41,7 @@ services:
       - key: JIRA_PROJECT_KEY
         value: CM3
       - key: JIRA_BOARD_ID
-        value: 1
+        value: "1"
       - key: JIRA_STORY_TYPE
         value: Story
       - key: JIRA_EPIC_TYPE
@@ -68,7 +68,7 @@ services:
     startCommand: node scripts/start-mcp.mjs
     envVars:
       - key: MCP_PORT
-        value: 10000  # Render uses port 10000 by default
+        value: "10000"  # Render uses port 10000 by default
       - key: MCP_API_KEY
         generateValue: true  # Render will generate a secure random value
       - key: NEXT_PUBLIC_APP_BASE_URL
