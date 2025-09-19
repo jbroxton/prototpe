@@ -4,6 +4,7 @@ import { z } from 'zod';
 const APP_BASE = process.env.NEXT_PUBLIC_APP_BASE_URL ?? 'https://app.speqq.com';
 const MCP_API_KEY = process.env.MCP_API_KEY;
 const MCP_PORT = Number(process.env.MCP_PORT ?? 3100);
+const MCP_HOST = process.env.MCP_HOST ?? '0.0.0.0';
 
 if (!MCP_API_KEY) {
   console.error('MCP_API_KEY must be provided');
@@ -347,11 +348,12 @@ server.addTool({
 server.start({
   transportType: 'httpStream',
   httpStream: {
+    host: MCP_HOST,
     port: MCP_PORT,
     stateless: true,
   },
 }).then(() => {
-  console.log('[FastMCP] listening on port', MCP_PORT);
+  console.log('[FastMCP] listening on', `${MCP_HOST}:${MCP_PORT}`);
 }).catch((error) => {
   console.error('[FastMCP] failed to start', error);
   process.exit(1);
