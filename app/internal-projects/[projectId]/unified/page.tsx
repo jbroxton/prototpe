@@ -1364,7 +1364,7 @@ export default function ProjectUnifiedView() {
           
           {filteredStories.length === 0 && (
             <div className="p-8 text-center text-neutral-500">
-              No user stories found. Click "Add Story" to create one.
+              No user stories found. Click &quot;Add Story&quot; to create one.
             </div>
           )}
         </div>
