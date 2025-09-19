@@ -21,8 +21,6 @@ services:
         sync: false  # You'll need to set this manually in Render dashboard
       - key: MODEL
         value: gpt-4o-mini
-      - key: NODE_ENV
-        value: production
       - key: GITHUB_WEBHOOK_SECRET
         generateValue: true
       - key: WEBHOOK_PUBLIC_URL
