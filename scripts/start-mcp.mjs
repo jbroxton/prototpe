@@ -74,7 +74,7 @@ const server = new FastMCP({
 });
 
 server.addTool({
-  name: 'projects.create',
+  name: 'projects_create',
   description: 'Create a new internal project',
   parameters: z.object({
     name: z.string(),
@@ -92,7 +92,7 @@ server.addTool({
 });
 
 server.addTool({
-  name: 'projects.get',
+  name: 'projects_get',
   description: 'Get a project by ID',
   parameters: z.object({ projectId: z.string() }),
   execute: async ({ projectId }) => {
@@ -102,7 +102,7 @@ server.addTool({
 });
 
 server.addTool({
-  name: 'projects.list',
+  name: 'projects_list',
   description: 'List projects with optional filters',
   parameters: z.object({
     limit: z.number().optional(),
@@ -121,7 +121,7 @@ server.addTool({
 });
 
 server.addTool({
-  name: 'projects.update',
+  name: 'projects_update',
   description: 'Update project fields',
   parameters: z.object({
     projectId: z.string(),
@@ -140,7 +140,7 @@ server.addTool({
 });
 
 server.addTool({
-  name: 'projects.delete',
+  name: 'projects_delete',
   description: 'Delete a project (requires confirm=true)',
   parameters: z.object({ projectId: z.string(), confirm: z.boolean() }),
   execute: async ({ projectId, confirm }) => {
@@ -151,7 +151,7 @@ server.addTool({
 });
 
 server.addTool({
-  name: 'stories.create',
+  name: 'stories_create',
   description: 'Create a user story within a project',
   parameters: z.object({
     projectId: z.string(),
@@ -185,7 +185,7 @@ server.addTool({
 });
 
 server.addTool({
-  name: 'stories.list',
+  name: 'stories_list',
   description: 'List user stories for a project',
   parameters: z.object({ projectId: z.string() }),
   execute: async ({ projectId }) => {
@@ -197,7 +197,7 @@ server.addTool({
 });
 
 server.addTool({
-  name: 'stories.update',
+  name: 'stories_update',
   description: 'Update a user story',
   parameters: z.object({
     projectId: z.string(),
@@ -233,7 +233,7 @@ server.addTool({
 });
 
 server.addTool({
-  name: 'stories.delete',
+  name: 'stories_delete',
   description: 'Delete a user story',
   parameters: z.object({ projectId: z.string(), storyId: z.string() }),
   execute: async ({ projectId, storyId }) => {
@@ -248,7 +248,7 @@ server.addTool({
 });
 
 server.addTool({
-  name: 'acs.create',
+  name: 'acs_create',
   description: 'Create acceptance criteria',
   parameters: z.object({
     projectId: z.string(),
@@ -280,7 +280,7 @@ server.addTool({
 });
 
 server.addTool({
-  name: 'acs.list',
+  name: 'acs_list',
   description: 'List acceptance criteria for a story',
   parameters: z.object({ projectId: z.string(), storyId: z.string() }),
   execute: async ({ projectId, storyId }) => {
@@ -292,7 +292,7 @@ server.addTool({
 });
 
 server.addTool({
-  name: 'acs.update',
+  name: 'acs_update',
   description: 'Update acceptance criteria',
   parameters: z.object({
     projectId: z.string(),
@@ -326,7 +326,7 @@ server.addTool({
 });
 
 server.addTool({
-  name: 'acs.delete',
+  name: 'acs_delete',
   description: 'Delete acceptance criteria',
   parameters: z.object({ projectId: z.string(), storyId: z.string(), id: z.string() }),
   execute: async ({ projectId, storyId, id }) => {
